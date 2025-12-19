@@ -1,0 +1,56 @@
+name: Validate Module 4
+
+on:
+  push:
+    paths:
+      - 'src/app.js'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  validate_module4:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate App
+        run: |
+          if [ ! -f src/app.js ]; then
+            echo "File src/app.js not found!"
+            exit 1
+          fi
+          
+          # Check if it imports the modern logger
+          if grep -q "legacy/logger" src/app.js; then
+            echo "Error: You are using the legacy logger!"
+            exit 1
+          fi
+          
+          if ! grep -q "modern/logger" src/app.js; then
+             echo "Error: You are not using the modern logger!"
+             exit 1
+          fi
+
+          console.log("Validation passed!");
+
+      - name: Post Module 5 Instructions
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1
+          body-file: .github/steps/5-iterative-feedback.md
+
+      - name: Enable next workflow
+        if: success()
+        run: gh workflow enable "Validate Module 5"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

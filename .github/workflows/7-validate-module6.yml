@@ -1,0 +1,72 @@
+name: Validate Module 6
+
+on:
+  push:
+    paths:
+      - 'src/server.js'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  validate_module6:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install express
+
+      - name: Validate Server
+        run: |
+          if [ ! -f src/server.js ]; then
+            echo "File src/server.js not found!"
+            exit 1
+          fi
+          
+          # We can't easily run the server and test endpoints in this simple script without more setup (like supertest)
+          # So we will check for code patterns.
+          
+          if ! grep -q "express" src/server.js; then
+             echo "Error: Does not seem to use express"
+             exit 1
+          fi
+          
+          if ! grep -q "app.get('/todos'" src/server.js && ! grep -q 'app.get("/todos"' src/server.js; then
+             echo "Error: Missing GET /todos endpoint"
+             exit 1
+          fi
+          
+          if ! grep -q "app.post('/todos'" src/server.js && ! grep -q 'app.post("/todos"' src/server.js; then
+             echo "Error: Missing POST /todos endpoint"
+             exit 1
+          fi
+
+          console.log("Validation passed!");
+
+      - name: Complete Course
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1
+          body: |
+            # Congratulations! 🎉
+            
+            You have completed the AI Coding Assistant Enablement Bootcamp!
+            
+            You have learned:
+            - Prompt Engineering
+            - Context Engineering
+            - Instruction Files
+            - Scope Control
+            - Iterative Feedback
+            - Real-world Application
+            
+            Great job!

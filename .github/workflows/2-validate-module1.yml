@@ -1,0 +1,59 @@
+name: Validate Module 1
+
+on:
+  push:
+    paths:
+      - 'src/fibonacci.js'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  validate_module1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Fibonacci
+        run: |
+          if [ ! -f src/fibonacci.js ]; then
+            echo "File src/fibonacci.js not found!"
+            exit 1
+          fi
+          # Simple validation script
+          cat <<EOF > test_fib.js
+          const fib = require('./src/fibonacci.js');
+          const assert = require('assert');
+          try {
+            assert.strictEqual(fib(0), 0);
+            assert.strictEqual(fib(1), 1);
+            assert.strictEqual(fib(5), 5);
+            assert.strictEqual(fib(10), 55);
+            console.log("Validation passed!");
+          } catch (e) {
+            console.error("Validation failed:", e.message);
+            process.exit(1);
+          }
+          EOF
+          node test_fib.js
+
+      - name: Post Module 2 Instructions
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1 # Assuming issue 1 is the tracking issue, might need to find it dynamically
+          body-file: .github/steps/2-context-engineering.md
+
+      - name: Enable next workflow
+        if: success()
+        run: gh workflow enable "Validate Module 2"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

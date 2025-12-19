@@ -1,0 +1,60 @@
+name: Validate Module 5
+
+on:
+  push:
+    paths:
+      - 'src/emailValidator.js'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  validate_module5:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate Email Validator
+        run: |
+          if [ ! -f src/emailValidator.js ]; then
+            echo "File src/emailValidator.js not found!"
+            exit 1
+          fi
+          
+          cat <<EOF > test_email.js
+          const validate = require('./src/emailValidator.js');
+          const assert = require('assert');
+          try {
+            assert.strictEqual(validate('test@example.com'), true);
+            assert.strictEqual(validate('test@example.org'), true);
+            assert.strictEqual(validate('test@example.net'), false, "Should only allow .com and .org");
+            assert.strictEqual(validate(null), false, "Should handle null");
+            assert.strictEqual(validate(undefined), false, "Should handle undefined");
+            console.log("Validation passed!");
+          } catch (e) {
+            console.error("Validation failed:", e.message);
+            process.exit(1);
+          }
+          EOF
+          node test_email.js
+
+      - name: Post Module 6 Instructions
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1
+          body-file: .github/steps/6-real-world-simulation.md
+
+      - name: Enable next workflow
+        if: success()
+        run: gh workflow enable "Validate Module 6"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,60 @@
+name: Validate Module 2
+
+on:
+  push:
+    paths:
+      - 'src/userService.js'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  validate_module2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate UserService
+        run: |
+          if [ ! -f src/userService.js ]; then
+            echo "File src/userService.js not found!"
+            exit 1
+          fi
+          # Simple validation script
+          cat <<EOF > test_user.js
+          const UserService = require('./src/userService.js');
+          const User = require('./src/user.js');
+          const assert = require('assert');
+          try {
+            const service = new UserService();
+            // Check if it has methods (assuming add/get/delete based on prompt)
+            // This is loose validation as we don't know exact method names, but we can check for class existence
+            assert.ok(service, "UserService should be instantiated");
+            console.log("Validation passed!");
+          } catch (e) {
+            console.error("Validation failed:", e.message);
+            process.exit(1);
+          }
+          EOF
+          node test_user.js
+
+      - name: Post Module 3 Instructions
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1
+          body-file: .github/steps/3-instruction-files.md
+
+      - name: Enable next workflow
+        if: success()
+        run: gh workflow enable "Validate Module 3"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

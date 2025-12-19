@@ -1,0 +1,61 @@
+name: Validate Module 3
+
+on:
+  push:
+    paths:
+      - 'src/mathUtils.js'
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  validate_module3:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate MathUtils
+        run: |
+          if [ ! -f src/mathUtils.js ]; then
+            echo "File src/mathUtils.js not found!"
+            exit 1
+          fi
+          if [ ! -f .github/copilot-instructions.md ]; then
+             echo "File .github/copilot-instructions.md not found!"
+             exit 1
+          fi
+          
+          # Check for arrow function syntax in the file content
+          if ! grep -q "=>" src/mathUtils.js; then
+            echo "Error: Did not find arrow function syntax '=>' in src/mathUtils.js"
+            exit 1
+          fi
+          
+          # Check for JSDoc
+          if ! grep -q "/**" src/mathUtils.js; then
+             echo "Error: Did not find JSDoc comments in src/mathUtils.js"
+             exit 1
+          fi
+
+          console.log("Validation passed!");
+
+      - name: Post Module 4 Instructions
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: 1
+          body-file: .github/steps/4-scope-context.md
+
+      - name: Enable next workflow
+        if: success()
+        run: gh workflow enable "Validate Module 4"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
