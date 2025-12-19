@@ -49,7 +49,7 @@ jobs:
              exit 1
           fi
 
-          console.log("Validation passed!");
+          echo "Validation passed!"
 
       - name: Complete Course
         if: success()

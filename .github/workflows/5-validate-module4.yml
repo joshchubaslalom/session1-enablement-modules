@@ -40,7 +40,7 @@ jobs:
              exit 1
           fi
 
-          console.log("Validation passed!");
+          echo "Validation passed!"
 
       - name: Post Module 5 Instructions
         if: success()
