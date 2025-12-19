@@ -4,7 +4,7 @@
  * @returns {number} - The area of the circle.
  */
 const calculateCircleArea = (radius) => {
-    if (radius < 0) {
+    if (radius < 0) { 
         throw new Error('Radius cannot be negative');
     }
     return Math.PI * Math.pow(radius, 2);
