@@ -1,3 +1,3 @@
 const log = require('./modern/logger');
 
-log('Application started');
+log('App started');
